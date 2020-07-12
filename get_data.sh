@@ -9,28 +9,21 @@ curl -LO https://multiqa.s3.amazonaws.com/squad2-0_format_data/NewsQA_dev.json.g
 echo ""
 echo "Processing NewsQA"
 cd ../..
+cd preprocessing/
 python prepare_gzip_data.py \
-	--input news_qa/raw/NewsQA_train.json.gz \
-	--output news_qa/raw/newsqa_train.json
+	--input ../news_qa/raw/NewsQA_train.json.gz \
+	--output ../news_qa/newsqa_train.json
 
 python prepare_gzip_data.py \
-	--input news_qa/raw/NewsQA_dev.json.gz \
-	--output news_qa/raw/newsqa_dev.json
-
-python squad_to_csv.py \
-	--input news_qa/raw/newsqa_train.json \
-	--output news_qa/newsqa_train.csv
-
-python squad_to_csv.py \
-	--input news_qa/raw/newsqa_dev.json \
-	--output news_qa/newsqa_dev.csv
+	--input ../news_qa/raw/NewsQA_dev.json.gz \
+	--output ../news_qa/newsqa_dev.json
 
 
 echo ""
 echo "Downloading MCTest"
-cd ..
-mkdir -p datasets/mctest/raw
-cd datasets/mctest/raw
+cd ../..
+mkdir -p datasets/mc_test/raw
+cd datasets/mc_test/raw
 git clone https://github.com/mcobzarenco/mctest 
 
 echo "Processing MCTest"
@@ -42,9 +35,11 @@ mv *.ans ../../..
 cd ../../..
 rm -rf mctest/
 cd ../..
+cd preprocessing/
 
-pwd
-python mctest.py
+python prepare_mctest.py \
+	--input_dir ../mc_test/raw/ \
+	--output_dir ../mc_test/
 
 echo ""
 echo "Finished"
