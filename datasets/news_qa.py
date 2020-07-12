@@ -26,7 +26,7 @@ import nlp
 
 
 _CITATION = """\
-@article{Trischler_2017,
+@article{news_qa,
    title={NewsQA: A Machine Comprehension Dataset},
    url={http://dx.doi.org/10.18653/v1/W17-2623},
    DOI={10.18653/v1/w17-2623},
