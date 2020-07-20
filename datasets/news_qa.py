@@ -21,8 +21,11 @@ from __future__ import absolute_import, division, print_function
 import json
 import logging
 import os
+import re
 
 import nlp
+
+from .common import process_text, strip_newlines
 
 
 _CITATION = """\
@@ -90,14 +93,8 @@ class NewsQA(nlp.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=nlp.Features(
                 {
-                    "id": nlp.Value("string"),
-                    "title": nlp.Value("string"),
-                    "context": nlp.Value("string"),
-                    "question": nlp.Value("string"),
-                    "answers": nlp.features.Sequence(
-                        {"text": nlp.Value("string"),
-                         "answer_start": nlp.Value("int32"), }
-                    ),
+                    "source_text": nlp.Value("string"),
+                    "target_text": nlp.Value("string"),
                 }
             ),
             # No default supervised_keys (as we have to pass both question
@@ -121,30 +118,34 @@ class NewsQA(nlp.GeneratorBasedBuilder):
                                "filepath": downloaded_files["test"]}),
         ]
 
+    def _strip_context_formatting(self, context):
+        context = re.sub(r'^(.*?)-- ', '', context)
+        return context
+
     def _generate_examples(self, filepath):
         """This function returns the examples in the raw (text) form."""
         logging.info("generating examples from = %s", filepath)
         with open(filepath) as f:
             news_qa = json.load(f)
             for article in news_qa["data"]:
-                title = article.get("title", "").strip()
                 for paragraph in article["paragraphs"]:
                     context = paragraph["context"].strip()
+                    context = self._strip_context_formatting(context)
+                    context = strip_newlines(context)
                     for qa in paragraph["qas"]:
                         question = qa["question"].strip()
+                        question = strip_newlines(question)
                         id_ = qa["id"]
 
-                        answer_starts = [answer["answer_start"]
-                                         for answer in qa["answers"]]
-                        answers = [answer["text"].strip()
-                                   for answer in qa["answers"]]
+                        # A single story has an empty answers-field. We simply
+                        # skip this one
+                        try:
+                            answer = qa["answers"][0]["text"].strip()
+                        except:
+                            continue
+
+                        answer = strip_newlines(answer)
 
                         # Features currently used are "context", "question", and "answers".
                         # Others are extracted here for the ease of future expansions.
-                        yield id_, {
-                            "title": title,
-                            "context": context,
-                            "question": question,
-                            "id": id_,
-                            "answers": {"answer_start": answer_starts, "text": answers, },
-                        }
+                        yield id_, process_text(context, answer, question)

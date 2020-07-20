@@ -7,8 +7,11 @@ from __future__ import absolute_import, division, print_function
 import csv
 import json
 import os
+import re
 
 import nlp
+
+from .common import process_text, strip_newlines
 
 
 _CITATION = """\
@@ -49,24 +52,21 @@ restricted, we hope MCTest will serve to encourage research and provide a clear
 metric for advancement on the machine comprehension of text.
 """
 
-_URL = ""
-_TEST_FILE = ""
-_TRAIN_FILE = ""
-_DEV_FILE = ""
-
 
 class MCTest(nlp.GeneratorBasedBuilder):
     VERSION = nlp.Version("0.1.0")
+    _TRAINING_FILE = "./datasets/mc_test/mctest_train.csv"
+    _DEV_FILE = "./datasets/mc_test/mctest_test.csv"
+
+    NEWLINE = "\\\\newline"
 
     def _info(self):
         return nlp.DatasetInfo(
             description=_DESCRIPTION,
             features=nlp.Features(
                 {
-                    "id": nlp.Value("int32"),
-                    "context": nlp.Value("string"),
-                    "question": nlp.Value("string"),
-                    "answer": nlp.Value("string")
+                    "source_text": nlp.Value("string"),
+                    "target_text": nlp.Value("string"),
                 }
             ),
             supervised_keys=None,
@@ -76,7 +76,11 @@ class MCTest(nlp.GeneratorBasedBuilder):
 
     def _split_generators(self, dl_manager):
         """Returns SplitGenerators."""
-        urls_to_download = self.config.data_files
+        # urls_to_download = self.config.data_files
+        urls_to_download = {
+            "train": self._TRAINING_FILE,
+            "test": self._DEV_FILE,
+        }
         dl_dir = dl_manager.download_and_extract(urls_to_download)
         return [
             nlp.SplitGenerator(
@@ -89,14 +93,20 @@ class MCTest(nlp.GeneratorBasedBuilder):
             ),
         ]
 
+    def _strip_custom_newlines(self, text):
+        # Remove special case newline
+        text = re.sub("\\\\newline", " ", text)
+        # Remove extra spaces from removing newlines
+        text = re.sub("  +", " ", text)
+        return text
+
     def _generate_examples(self, filepath, split):
         """Yields examples."""
         with open(filepath) as f:
             data = csv.DictReader(f)
             for id_, row in enumerate(data):
-                yield id_, {
-                    "id": id_,
-                    "context": row["context"],
-                    "question": row["question"],
-                    "answer": row["answer"]
-                }
+                question = strip_newlines(row["question"], self.NEWLINE)
+                context = strip_newlines(row["context"], self.NEWLINE)
+                answer = strip_newlines(row["answer"], self.NEWLINE)
+
+                yield id_, process_text(context, answer, question)
