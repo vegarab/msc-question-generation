@@ -14,7 +14,6 @@ class DataProcessor:
     def __call__(self, dataset):
         dataset = dataset.map(self._add_eos_tokens)
         dataset = dataset.map(self._create_features)
-
         return dataset
 
     def _add_eos_tokens(self, sample):
