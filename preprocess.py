@@ -41,3 +41,32 @@ class DataProcessor:
         }
 
         return features
+
+
+def DataCollator():
+    def __init__(self, tokenizer, model_t="t5", is_training=True, tpu=False):
+        self.tokenizer = tokenizer
+        self.model_t = model_t
+        self.is_training = is_training
+        self.using_tpu = tpu
+
+    def __call__(self, batch: List) -> Dict[str, torch.Tensor]:
+        target_ids = torch.stack([sample["target_ids"] for sample in batch])
+        source_ids = torch.stack([sample["source_ids"] for sample in batch])
+        attention_mask = torch.stack(
+            [sample["attention_mask"] for sample in batch])
+
+        labels = target_ids[:, :-1].contiguous()
+        lm_labels = target_ids[:, 1:].clone().detach()
+
+        if self.is_training:
+            lm_labels[lm_labels[:, 1:] == self.tokenizer.pad_token_id]] = -100
+
+        batch_params = {
+            "input_ids": source_ids,
+            "attention_mask": attention_mask,
+            "labels": lm_labels,
+            "decoder_input_ids": labels
+        }
+
+        return batch_Params
