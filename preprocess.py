@@ -1,13 +1,25 @@
+import os
+from dataclasses import dataclass, field
+
 import nlp
 import torch
-from transformers import T5Tokenizer
+
+from transformers import (
+    HfArgumentParser,
+    T5Tokenizer
+)
+
+from args import DataArguments
+
+
+MODEL_TO_TOK = {
+    "t5-base": T5Tokenizer,
+}
 
 
 class DataProcessor:
-    def __init__(self, tokenizer, model_t="t5", max_source_length=512,
-                 max_target_length=64):
+    def __init__(self, tokenizer, max_source_length=512, max_target_length=32):
         self.tokenizer = tokenizer
-        self.model_t = model_t
         self.max_source_length = max_source_length
         self.max_target_length = max_target_length
 
@@ -60,7 +72,7 @@ def DataCollator():
         lm_labels = target_ids[:, 1:].clone().detach()
 
         if self.is_training:
-            lm_labels[lm_labels[:, 1:] == self.tokenizer.pad_token_id]] = -100
+            lm_labels[lm_labels[:, 1:] == self.tokenizer.pad_token_id] = -100
 
         batch_params = {
             "input_ids": source_ids,
@@ -69,4 +81,35 @@ def DataCollator():
             "decoder_input_ids": labels
         }
 
-        return batch_Params
+        return batch_params
+
+
+def preprocess():
+    parser = HfArgumentParser((DataArguments))
+    data_args = parser.parse_args_into_dataclasses()
+
+    tok_name = data_args.tokenizer_name
+    tokenizer = MODEL_TO_TOK[tok_name].from_pretrained(tok_name)
+
+    processor = DataProcessor(
+        tokenizer, data_args.max_source_length, data_args.max_target_length)
+
+    train_data = nlp.load_dataset(
+        f"./datasets/{data_args.dataset}.py", split=nlp.Split.TRAIN)
+    test_data = nlp.load_dataset(
+        f"./datasets/{data_args.dataset}.py", split=nlp.Split.TEST)
+
+    train_data = processor(train_data)
+    test_data = processor(test_data)
+
+    # Setup metadata for saving to .pt file
+    fields = ["source_ids", "target_ids", "attention_mask"]
+    train_data.set_format(type="torch", columns=fields)
+    test_data.set_format(type="torch", columns=fields)
+
+    torch.save(train_data, data_args.train_save_path)
+    torch.save(test_data, data_args.test_save_path)
+
+
+if __name__ == "__main__":
+    preprocess()
