@@ -25,7 +25,7 @@ class DataProcessor:
 
     def __call__(self, dataset):
         dataset = dataset.map(self._add_eos_tokens)
-        dataset = dataset.map(self._create_features)
+        dataset = dataset.map(self._create_features, batched=True)
         return dataset
 
     def _add_eos_tokens(self, sample):
@@ -38,13 +38,13 @@ class DataProcessor:
             batch["source_text"],
             max_length=self.max_source_length,
             pad_to_max_length=True,
-            return_tensors="pt")
+            truncation=True)
 
         target_text_encoding = self.tokenizer.batch_encode_plus(
             batch["target_text"],
             max_length=self.max_target_length,
             pad_to_max_length=True,
-            return_tensors="pt")
+            truncation=True)
 
         features = {
             "source_ids": source_text_encoding["input_ids"],
@@ -86,7 +86,7 @@ def DataCollator():
 
 def preprocess():
     parser = HfArgumentParser((DataArguments))
-    data_args = parser.parse_args_into_dataclasses()
+    data_args = parser.parse_args_into_dataclasses()[0]
 
     tok_name = data_args.tokenizer_name
     tokenizer = MODEL_TO_TOK[tok_name].from_pretrained(tok_name)
@@ -97,7 +97,7 @@ def preprocess():
     train_data = nlp.load_dataset(
         f"./datasets/{data_args.dataset}.py", split=nlp.Split.TRAIN)
     test_data = nlp.load_dataset(
-        f"./datasets/{data_args.dataset}.py", split=nlp.Split.TEST)
+        f"./datasets/{data_args.dataset}.py", split=nlp.Split.VALIDATION)
 
     train_data = processor(train_data)
     test_data = processor(test_data)

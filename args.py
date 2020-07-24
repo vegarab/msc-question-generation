@@ -12,6 +12,9 @@ class Arguments:
     model_name: str = field(
         metadata={"help": "Model identifier for models in huggingface/transformers"}
     )
+    wandb_project: str = field(
+        metadata={"help": "Name of wandb project for loggin"}
+    )
     tokenizer_name: str = field(
         metadata={"help": "Tokenizer identifier, defaults to model_name"},
         default=None
@@ -23,9 +26,6 @@ class Arguments:
     max_target_lenght: int = field(
         metadata={"help": "Max input length for the target question to generate"},
         default=32
-    )
-    wandb_project: str = field(
-        metadata={"help": "Name of wandb project for loggin"}
     )
 
 
@@ -40,14 +40,14 @@ class DataArguments:
     tokenizer_name: str = field(
         metadata={"help": "Tokenizer identifier, from huggingface/transformers"}
     )
+    dataset: str = field(
+        metadata={"help": "Dataset identifier from custom huggingface/nlp scripts"}
+    )
     max_source_length: int = field(
         metadata={"help": "Max input length for the source context + answer"},
         default=512
     )
-    max_target_lenght: int = field(
+    max_target_length: int = field(
         metadata={"help": "Max input length for the target question to generate"},
         default=32
-    )
-    dataset: str = field(
-        metadata={"help": "Dataset identifier from custom huggingface/nlp scripts"}
     )
