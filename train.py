@@ -42,3 +42,6 @@ def run(args):
     tokenizer_name = args.model_name if args.tokenizer_name is None else args.tokenizer_name
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name)
     tokenizer = MODEL_TO_TOK[tokenizer_name].from_pretrained(tokenizer_name)
+
+    train_data = torch.load(args.train_data_path)
+    test_data = torch.load(args.test_data_path)

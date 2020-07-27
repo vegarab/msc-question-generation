@@ -103,7 +103,7 @@ class Squad(nlp.GeneratorBasedBuilder):
         return [
             nlp.SplitGenerator(name=nlp.Split.TRAIN, gen_kwargs={
                                "filepath": downloaded_files["train"]}),
-            nlp.SplitGenerator(name=nlp.Split.VALIDATION, gen_kwargs={
+            nlp.SplitGenerator(name=nlp.Split.TEST, gen_kwargs={
                                "filepath": downloaded_files["dev"]}),
         ]
 

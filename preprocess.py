@@ -94,10 +94,18 @@ def preprocess():
     processor = DataProcessor(
         tokenizer, data_args.max_source_length, data_args.max_target_length)
 
-    train_data = nlp.load_dataset(
-        f"./datasets/{data_args.dataset}.py", split=nlp.Split.TRAIN)
+    # CosmosQA has train, test and validation splits. Since this project only
+    # wants a single split for testing, we merge the train and validation
+    # splits.
+    if data_args.dataset == "cosmos":
+        train_data = nlp.load_dataset(
+            f"./datasets/{data_args.dataset}.py", split="train+validation")
+    else:
+        train_data = nlp.load_dataset(
+            f"./datasets/{data_args.dataset}.py", split=nlp.Split.TRAIN)
+
     test_data = nlp.load_dataset(
-        f"./datasets/{data_args.dataset}.py", split=nlp.Split.VALIDATION)
+        f"./datasets/{data_args.dataset}.py", split=nlp.Split.TEST)
 
     train_data = processor(train_data)
     test_data = processor(test_data)
