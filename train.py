@@ -14,16 +14,16 @@ from transformers import (
 )
 
 
-from preprocess import MODEL_TO_TOK
+from preprocess import MODEL_TO_TOK, DataCollator
 from args import Arguments, DataArguments
 
 
 logger = logging.getLogger(__name__)
 
 
-def run(args):
+def run(args=None):
     parser = HfArgumentParser((Arguments, TrainingArguments))
-    args, training_args = parser.parse_args_into_dataclasses()
+    args, training_args = parser.parse_args_into_dataclasses(args)
 
     # Setup logging
     logging.basicConfig(
@@ -43,5 +43,26 @@ def run(args):
     model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name)
     tokenizer = MODEL_TO_TOK[tokenizer_name].from_pretrained(tokenizer_name)
 
-    train_data = torch.load(args.train_data_path)
-    test_data = torch.load(args.test_data_path)
+    train_data = torch.load(
+        args.train_data_path) if training_args.do_train else None
+    test_data = torch.load(
+        args.test_data_path) if training_args.do_eval else None
+
+    collator = DataCollator(tokenizer=tokenizer,
+                            is_training=training_args.do_train,
+                            tpu=training_args.tpu_num_cores is not None)
+
+    trainer = Trainer(model=model,
+                      args=training_args,
+                      train_dataset=train_data,
+                      eval_dataset=test_data,
+                      data_collator=collator,
+                      prediction_loss_only=True)
+
+    if training_args.do_train:
+        trainer.train(model_path=args.model_path)
+        trainer.save_model()
+
+
+if __name__ == "__main__":
+    run()

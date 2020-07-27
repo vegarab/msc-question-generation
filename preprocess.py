@@ -14,6 +14,7 @@ from args import DataArguments
 
 MODEL_TO_TOK = {
     "t5-base": T5Tokenizer,
+    "t5-small": T5Tokenizer,
 }
 
 
@@ -55,14 +56,14 @@ class DataProcessor:
         return features
 
 
-def DataCollator():
+class DataCollator:
     def __init__(self, tokenizer, model_t="t5", is_training=True, tpu=False):
         self.tokenizer = tokenizer
         self.model_t = model_t
         self.is_training = is_training
         self.using_tpu = tpu
 
-    def __call__(self, batch: List) -> Dict[str, torch.Tensor]:
+    def __call__(self, batch):
         target_ids = torch.stack([sample["target_ids"] for sample in batch])
         source_ids = torch.stack([sample["source_ids"] for sample in batch])
         attention_mask = torch.stack(
@@ -72,7 +73,7 @@ def DataCollator():
         lm_labels = target_ids[:, 1:].clone().detach()
 
         if self.is_training:
-            lm_labels[lm_labels[:, 1:] == self.tokenizer.pad_token_id] = -100
+            lm_labels[lm_labels[:, :] == self.tokenizer.pad_token_id] = -100
 
         batch_params = {
             "input_ids": source_ids,
