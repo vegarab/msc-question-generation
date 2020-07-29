@@ -6,7 +6,8 @@ import torch
 
 from transformers import (
     HfArgumentParser,
-    T5Tokenizer
+    T5Tokenizer,
+    XLNetTokenizer,
 )
 
 from args import DataArguments
@@ -15,6 +16,7 @@ from args import DataArguments
 MODEL_TO_TOK = {
     "t5-base": T5Tokenizer,
     "t5-small": T5Tokenizer,
+    "xlnet-base-cased": XLNetTokenizer,
 }
 
 

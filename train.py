@@ -7,7 +7,6 @@ import torch
 from transformers import (
     AutoModelForSeq2SeqLM,
     HfArgumentParser,
-    T5Tokenizer,
     Trainer,
     TrainingArguments,
     set_seed
