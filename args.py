@@ -15,9 +15,6 @@ class Arguments:
     wandb_project: str = field(
         metadata={"help": "Name of wandb project for loggin"}
     )
-    model_path: str = field(
-        metadata={"help": "Path to save/load the model"}
-    )
     tokenizer_name: str = field(
         metadata={"help": "Tokenizer identifier, defaults to model_name"},
         default=None
@@ -29,6 +26,14 @@ class Arguments:
     max_target_lenght: int = field(
         metadata={"help": "Max input length for the target question to generate"},
         default=32
+    )
+    use_checkpoint: bool = field(
+        metadata={"help": "Load a checkpoint from file"},
+        default=False
+    )
+    model_path: str = field(
+        metadata={"help": "Path to load the checkpoint model"},
+        default=None
     )
 
 
