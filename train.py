@@ -5,7 +5,9 @@ from dataclasses import dataclass, field
 import torch
 
 from transformers import (
-    AutoModelForSeq2SeqLM,
+    XLNetLMHeadModel,
+    T5ForConditionalGeneration,
+    EncoderDecoderModel,
     HfArgumentParser,
     Trainer,
     TrainingArguments,
@@ -13,11 +15,19 @@ from transformers import (
 )
 
 
-from preprocess import MODEL_TO_TOK, DataCollator
+from preprocess import NAME_TO_TOK, DataCollator
 from args import Arguments, DataArguments
 
 
 logger = logging.getLogger(__name__)
+
+
+NAME_TO_MODEL = {
+    "t5-base": T5ForConditionalGeneration,
+    "t5-small": T5ForConditionalGeneration,
+    "xlnet-base-cased": XLNetLMHeadModel,
+    "bert-base-cased": EncoderDecoderModel,
+}
 
 
 def run(args=None):
@@ -39,8 +49,14 @@ def run(args=None):
     logging.getLogger('wandb.run_manager').setLevel(logging.WARNING)
 
     tokenizer_name = args.model_name if args.tokenizer_name is None else args.tokenizer_name
-    model = AutoModelForSeq2SeqLM.from_pretrained(args.model_name)
-    tokenizer = MODEL_TO_TOK[tokenizer_name].from_pretrained(tokenizer_name)
+
+    # TODO: Fix this hard-coded shit
+    if args.model_name == "bert-base-cased":
+        model = EncoderDecoderModel.from_encoder_decoder_pretrained(
+            args.model_name, args.model_name)
+    else:
+        model = NAME_TO_MODEL[args.model_name].from_pretrained(args.model_name)
+    tokenizer = NAME_TO_TOK[tokenizer_name].from_pretrained(tokenizer_name)
 
     train_data = torch.load(
         args.train_data_path) if training_args.do_train else None
@@ -59,7 +75,7 @@ def run(args=None):
                       prediction_loss_only=True)
 
     if training_args.do_train:
-        trainer.train(model_path=args.model_path)
+        trainer.train()
         trainer.save_model()
 
 

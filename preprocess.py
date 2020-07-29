@@ -8,14 +8,16 @@ from transformers import (
     HfArgumentParser,
     T5Tokenizer,
     XLNetTokenizer,
+    BertTokenizer,
 )
 
 from args import DataArguments
 
 
-MODEL_TO_TOK = {
+NAME_TO_TOK = {
     "t5-base": T5Tokenizer,
     "t5-small": T5Tokenizer,
+    "bert-base-cased": BertTokenizer,
     "xlnet-base-cased": XLNetTokenizer,
 }
 
@@ -59,7 +61,7 @@ class DataProcessor:
 
 
 class DataCollator:
-    def __init__(self, tokenizer, model_t="t5", is_training=True, tpu=False):
+    def __init__(self, tokenizer, model_t="t5-base", is_training=True, tpu=False):
         self.tokenizer = tokenizer
         self.model_t = model_t
         self.is_training = is_training
@@ -92,7 +94,7 @@ def preprocess():
     data_args = parser.parse_args_into_dataclasses()[0]
 
     tok_name = data_args.tokenizer_name
-    tokenizer = MODEL_TO_TOK[tok_name].from_pretrained(tok_name)
+    tokenizer = NAME_TO_TOK[tok_name].from_pretrained(tok_name)
 
     processor = DataProcessor(
         tokenizer, data_args.max_source_length, data_args.max_target_length)

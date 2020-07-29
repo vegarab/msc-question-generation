@@ -15,9 +15,6 @@ class Arguments:
     wandb_project: str = field(
         metadata={"help": "Name of wandb project for loggin"}
     )
-    model_path: str = field(
-        metadata={"help": "Path to save/load the model"}
-    )
     tokenizer_name: str = field(
         metadata={"help": "Tokenizer identifier, defaults to model_name"},
         default=None
