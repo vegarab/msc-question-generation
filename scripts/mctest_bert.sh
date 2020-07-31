@@ -8,10 +8,9 @@ python train.py \
 	--seed 42 \
 	--do_train \
 	--do_eval \
-	--no_cuda \
 	--eval_steps 100 \
 	--logging_steps 100 \
 	--num_train_epochs 1 \
-	--output_dir models/mc_test_bert \
+	--output_dir ./models/mc_test_bert \
 	--dataloader_drop_last \
-	--per_device_train_batch_size 1 \
+	--per_device_train_batch_size 8 \
