@@ -9,6 +9,7 @@ from transformers import (
     T5Tokenizer,
     XLNetTokenizer,
     BertTokenizer,
+    BartTokenizer,
 )
 
 from args import DataArguments
@@ -19,6 +20,7 @@ NAME_TO_TOK = {
     "t5-small": T5Tokenizer,
     "bert-base-cased": BertTokenizer,
     "xlnet-base-cased": XLNetTokenizer,
+    "facebook/bart-large": BartTokenizer,
 }
 
 

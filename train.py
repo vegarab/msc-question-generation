@@ -7,6 +7,7 @@ import torch
 from transformers import (
     XLNetLMHeadModel,
     T5ForConditionalGeneration,
+    BartForConditionalGeneration,
     EncoderDecoderModel,
     HfArgumentParser,
     Trainer,
@@ -27,6 +28,7 @@ NAME_TO_MODEL = {
     "t5-small": T5ForConditionalGeneration,
     "xlnet-base-cased": XLNetLMHeadModel,
     "bert-base-cased": EncoderDecoderModel,
+    "facebook/bart-large": BartForConditionalGeneration,
 }
 
 
@@ -46,6 +48,9 @@ def run(args=None):
 
     # Setup wandb
     os.environ["WANDB_PROJECT"] = args.wandb_project
+    if args.is_dryrun:
+        os.environ["WANDB_MODE"] = "dryrun"
+
     logging.getLogger('wandb.run_manager').setLevel(logging.WARNING)
 
     tokenizer_name = args.model_name if args.tokenizer_name is None else args.tokenizer_name

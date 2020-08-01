@@ -27,6 +27,10 @@ class Arguments:
         metadata={"help": "Max input length for the target question to generate"},
         default=32
     )
+    is_dryrun: bool = field(
+        metadata={"help": "Set True to notify wandb that we are offline"},
+        default=False
+    )
 
 
 @dataclass
