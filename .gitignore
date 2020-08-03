@@ -3,3 +3,6 @@
 datasets/mc_test/
 datasets/news_qa/
 data/*
+
+wandb/*
+models/*
