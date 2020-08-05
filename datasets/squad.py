@@ -24,8 +24,6 @@ import os
 
 import nlp
 
-from .common import process_text
-
 
 _CITATION = """\
 @article{2016arXiv160605250R,
@@ -82,8 +80,9 @@ class Squad(nlp.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=nlp.Features(
                 {
-                    "source_text": nlp.Value("string"),
-                    "target_text": nlp.Value("string")
+                    "context": nlp.Value("string"),
+                    "answer": nlp.Value("string"),
+                    "question": nlp.Values("string")
                 }
             ),
             # No default supervised_keys (as we have to pass both question
@@ -128,4 +127,4 @@ class Squad(nlp.GeneratorBasedBuilder):
 
                         # Features currently used are "context", "question", and "answers".
                         # Others are extracted here for the ease of future expansions.
-                        yield id_, process_text(context, answer, question)
+                        yield id_, context, answer, question

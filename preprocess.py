@@ -25,19 +25,38 @@ NAME_TO_TOK = {
 
 
 class DataProcessor:
-    def __init__(self, tokenizer, max_source_length=512, max_target_length=32):
+    def __init__(self, tokenizer, max_source_length=512, max_target_length=32, is_bert=False):
         self.tokenizer = tokenizer
         self.max_source_length = max_source_length
         self.max_target_length = max_target_length
+        self.is_bert = is_bert
 
     def __call__(self, dataset):
+        dataset = dataset.map(self._format_text(context, answer, question))
         dataset = dataset.map(self._add_eos_tokens)
         dataset = dataset.map(self._create_features, batched=True)
+
         return dataset
 
+    def _format_text(self, sample):
+        if self.is_bert:
+            source_text = sample["answer"] + " [SEP] " + sample["context"]
+        else:
+            source_text = f"answer: {sample['answer']} context: {sample['context']}"
+
+        target_text = sample["question"]
+
+        features = {
+            "source_text": source_text,
+            "target_text": target_text
+        }
+
+        return features
+
     def _add_eos_tokens(self, sample):
-        sample["source_text"] = sample["source_text"] + " </s>"
-        sample["target_text"] = sample["target_text"] + " </s>"
+        if not self.is_bert:
+            sample["source_text"] = sample["source_text"] + " </s>"
+            sample["target_text"] = sample["target_text"] + " </s>"
         return sample
 
     def _create_features(self, batch):
@@ -98,8 +117,13 @@ def preprocess():
     tok_name = data_args.tokenizer_name
     tokenizer = NAME_TO_TOK[tok_name].from_pretrained(tok_name)
 
+    is_bert = False
+    # TODO: Fix this hard-coded mess
+    if tok_name == "bert-base-cased":
+        is_bert = True
+
     processor = DataProcessor(
-        tokenizer, data_args.max_source_length, data_args.max_target_length)
+        tokenizer, data_args.max_source_length, data_args.max_target_length, is_bert=is_bert)
 
     # CosmosQA has train, test and validation splits. Since this project only
     # wants a single split for testing, we merge the train and validation

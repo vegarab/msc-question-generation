@@ -11,7 +11,7 @@ import re
 
 import nlp
 
-from .common import process_text, strip_newlines
+from .common import strip_newlines
 
 
 _CITATION = """\
@@ -65,8 +65,9 @@ class MCTest(nlp.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=nlp.Features(
                 {
-                    "source_text": nlp.Value("string"),
-                    "target_text": nlp.Value("string"),
+                    "context": nlp.Value("string"),
+                    "answer": nlp.Value("string"),
+                    "question": nlp.Value("string")
                 }
             ),
             supervised_keys=None,
@@ -109,4 +110,4 @@ class MCTest(nlp.GeneratorBasedBuilder):
                 context = strip_newlines(row["context"], self.NEWLINE)
                 answer = strip_newlines(row["answer"], self.NEWLINE)
 
-                yield id_, process_text(context, answer, question)
+                yield id_, context, answer, question

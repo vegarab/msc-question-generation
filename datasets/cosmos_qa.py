@@ -8,8 +8,6 @@ import os
 
 import nlp
 
-from .common import process_text
-
 
 # TODO(cosmos_qa): BibTeX citation
 _CITATION = """\
@@ -46,8 +44,9 @@ class CosmosQa(nlp.GeneratorBasedBuilder):
             # nlp.features.FeatureConnectors
             features=nlp.Features(
                 {
-                    "source_text": nlp.Value("string"),
-                    "target_text": nlp.Value("string")
+                    "context": nlp.Value("string"),
+                    "answer": nlp.Value("string"),
+                    "question": nlp.Value("string")
                 }
             ),
             # If there's a common (input, target) tuple from the features,
@@ -101,7 +100,7 @@ class CosmosQa(nlp.GeneratorBasedBuilder):
                     question = data["question"]
                     label = int(data.get("label", -1))
 
-                    yield id_, process_text(context, answers[label], question)
+                    yield id_, context, answers[label], question
 
             else:
                 data = csv.DictReader(f)
@@ -112,4 +111,4 @@ class CosmosQa(nlp.GeneratorBasedBuilder):
                     question = row["question"]
                     label = int(row.get("label", -1))
 
-                    yield id_, process_text(context, answers[label], question)
+                    yield id_, context, answers[label], question

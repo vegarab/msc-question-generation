@@ -25,7 +25,7 @@ import re
 
 import nlp
 
-from .common import process_text, strip_newlines
+from .common import strip_newlines
 
 
 _CITATION = """\
@@ -93,8 +93,9 @@ class NewsQA(nlp.GeneratorBasedBuilder):
             description=_DESCRIPTION,
             features=nlp.Features(
                 {
-                    "source_text": nlp.Value("string"),
-                    "target_text": nlp.Value("string"),
+                    "context": nlp.Value("string"),
+                    "answer": nlp.Value("string"),
+                    "question": nlp.Value("string")
                 }
             ),
             # No default supervised_keys (as we have to pass both question
@@ -148,4 +149,4 @@ class NewsQA(nlp.GeneratorBasedBuilder):
 
                         # Features currently used are "context", "question", and "answers".
                         # Others are extracted here for the ease of future expansions.
-                        yield id_, process_text(context, answer, question)
+                        yield id_, context, answer, question
