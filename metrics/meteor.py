@@ -56,10 +56,10 @@ combination.
 _KWARGS_DESCRIPTION = """
 Computes METEOR score of translated segments against one or more references.
 Args:
-    predictions: list of translations to score.
-        Each translation should be tokenized into a list of tokens.
-    references: list of lists of references for each translation.
-        Each reference should be tokenized into a list of tokens.
+    predictions: list of predictions to score. Each predictions
+        should be a string with tokens separated by spaces.
+    references: list of reference for each prediction. Each
+        reference should be a string with tokens separated by spaces.
     alpha: Paramter for controlling relative weights of precision and recall. default: 0.9
     beta: Paramter for controlling shape of penalty as a function of fragmentation. default: 3
     gamma: Relative weight assigned to fragmentation penalty. default: 0.5
