@@ -53,10 +53,20 @@ class DataProcessor:
 
         return features
 
-    def _add_eos_tokens(self, sample):
+    def _add_eos_bos_tokens(self, sample):
         if not self.is_bert:
             sample["source_text"] = sample["source_text"] + " </s>"
-            sample["target_text"] = sample["target_text"] + " </s>"
+            # T5 does not add a BOS token when encoding..However, during
+            # generation is will replace the first token with <pad>, even
+            # though the first token is a part of the generated passage. This
+            # is a work-around to have the model learn that the first token of
+            # any target is always the BOS token. Bart adds <s> as BOS and BERT
+            # needs one specified during generation -- this will only trigger
+            # for T5Tokenizer
+            if not self.tokenizer.bos_token:
+                sample["target_text"] = f"<pad> {sample['target_text']} </s>"
+            else:
+                sample["target_text"] = sample["target_text"] + " </s>"
         return sample
 
     def _create_features(self, batch):
