@@ -21,6 +21,7 @@ NAME_TO_TOK = {
     "bert-base-cased": BertTokenizer,
     "xlnet-base-cased": XLNetTokenizer,
     "facebook/bart-large": BartTokenizer,
+    "facebook/bart-base": BartTokenizer,
 }
 
 

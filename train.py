@@ -29,6 +29,7 @@ NAME_TO_MODEL = {
     "xlnet-base-cased": XLNetLMHeadModel,
     "bert-base-cased": EncoderDecoderModel,
     "facebook/bart-large": BartForConditionalGeneration,
+    "facebook/bart-base": BartForConditionalGeneration,
 }
 
 
