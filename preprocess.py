@@ -31,6 +31,8 @@ class DataProcessor:
         self.max_source_length = max_source_length
         self.max_target_length = max_target_length
         self.is_bert = is_bert
+        # Set it here to suppress the warning when == False
+        self.bos_token = bool(self.tokenizer.bos_token)
 
     def __call__(self, dataset):
         dataset = dataset.map(self._format_text)
@@ -64,7 +66,7 @@ class DataProcessor:
             # any target is always the BOS token. Bart adds <s> as BOS and BERT
             # needs one specified during generation -- this will only trigger
             # for T5Tokenizer
-            if not self.tokenizer.bos_token:
+            if not self.bos_token:
                 sample["target_text"] = f"<pad> {sample['target_text']} </s>"
             else:
                 sample["target_text"] = sample["target_text"] + " </s>"
