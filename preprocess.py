@@ -43,7 +43,7 @@ class DataProcessor:
 
     def _format_text(self, sample):
         if self.is_bert:
-            source_text = sample["answer"] + " [SEP] " + sample["context"]
+            source_text = f"{sample['answer']} [SEP] {sample['context']}"
         else:
             source_text = f"answer: {sample['answer']} context: {sample['context']}"
 
@@ -58,7 +58,7 @@ class DataProcessor:
 
     def _add_eos_bos_tokens(self, sample):
         if not self.is_bert:
-            sample["source_text"] = sample["source_text"] + " </s>"
+            sample["source_text"] = f"{sample['source_text']}  </s>"
             # T5 does not add a BOS token when encoding..However, during
             # generation is will replace the first token with <pad>, even
             # though the first token is a part of the generated passage. This
@@ -69,7 +69,7 @@ class DataProcessor:
             if not self.bos_token:
                 sample["target_text"] = f"<pad> {sample['target_text']} </s>"
             else:
-                sample["target_text"] = sample["target_text"] + " </s>"
+                sample["target_text"] = f"{sample['target_text']} </s>"
         return sample
 
     def _create_features(self, batch):
