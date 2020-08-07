@@ -34,7 +34,7 @@ class DataProcessor:
 
     def __call__(self, dataset):
         dataset = dataset.map(self._format_text)
-        dataset = dataset.map(self._add_eos_tokens)
+        dataset = dataset.map(self._add_eos_bos_tokens)
         dataset = dataset.map(self._create_features, batched=True)
 
         return dataset
