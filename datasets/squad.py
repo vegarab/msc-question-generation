@@ -83,7 +83,7 @@ class Squad(nlp.GeneratorBasedBuilder):
                 {
                     "context": nlp.Value("string"),
                     "answer": nlp.Value("string"),
-                    "question": nlp.Values("string")
+                    "question": nlp.Value("string")
                 }
             ),
             # No default supervised_keys (as we have to pass both question
