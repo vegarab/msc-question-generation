@@ -128,7 +128,7 @@ def preprocess():
     # CosmosQA has train, test and validation splits. Since this project only
     # wants a single split for testing, we merge the train and validation
     # splits.
-    if data_args.dataset == "cosmos":
+    if data_args.dataset == "cosmos_qa":
         train_data = nlp.load_dataset(
             f"./datasets/{data_args.dataset}.py", split="train+validation")
     else:

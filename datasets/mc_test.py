@@ -11,7 +11,7 @@ import re
 
 import nlp
 
-from .common import strip_newlines
+from .common import strip_newlines, create_dict
 
 
 _CITATION = """\
@@ -110,4 +110,4 @@ class MCTest(nlp.GeneratorBasedBuilder):
                 context = strip_newlines(row["context"], self.NEWLINE)
                 answer = strip_newlines(row["answer"], self.NEWLINE)
 
-                yield id_, context, answer, question
+                yield id_, create_dict(context, answer, question)

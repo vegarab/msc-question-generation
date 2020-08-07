@@ -25,7 +25,7 @@ import re
 
 import nlp
 
-from .common import strip_newlines
+from .common import strip_newlines, create_dict
 
 
 _CITATION = """\
@@ -149,4 +149,4 @@ class NewsQA(nlp.GeneratorBasedBuilder):
 
                         # Features currently used are "context", "question", and "answers".
                         # Others are extracted here for the ease of future expansions.
-                        yield id_, context, answer, question
+                        yield id_, create_dict(context, answer, question)

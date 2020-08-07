@@ -8,6 +8,8 @@ import os
 
 import nlp
 
+from .common import create_dict
+
 
 # TODO(cosmos_qa): BibTeX citation
 _CITATION = """\
@@ -100,7 +102,7 @@ class CosmosQa(nlp.GeneratorBasedBuilder):
                     question = data["question"]
                     label = int(data.get("label", -1))
 
-                    yield id_, context, answers[label], question
+                    yield id_, create_dict(context, answers[label], question)
 
             else:
                 data = csv.DictReader(f)
@@ -111,4 +113,4 @@ class CosmosQa(nlp.GeneratorBasedBuilder):
                     question = row["question"]
                     label = int(row.get("label", -1))
 
-                    yield id_, context, answers[label], question
+                    yield id_, create_dict(context, answers[label], question)

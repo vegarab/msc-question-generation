@@ -24,6 +24,7 @@ import os
 
 import nlp
 
+from .common import create_dict
 
 _CITATION = """\
 @article{2016arXiv160605250R,
@@ -127,4 +128,4 @@ class Squad(nlp.GeneratorBasedBuilder):
 
                         # Features currently used are "context", "question", and "answers".
                         # Others are extracted here for the ease of future expansions.
-                        yield id_, context, answer, question
+                        yield id_, create_dict(context, answer, question)
