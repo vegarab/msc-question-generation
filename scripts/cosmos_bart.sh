@@ -1,8 +1,8 @@
 #!/bin/sh
 
 python train.py \
-	--train_data_path ./data/mctest_train_bart.pt \
-	--test_data_path ./data/mctest_test_bart.pt \
+	--train_data_path ./data/cosmos_train_bart.pt \
+	--test_data_path ./data/cosmos_test_bart.pt \
 	--model_name facebook/bart-base \
 	--wandb_project msc_question_generation \
 	--seed 42 \
@@ -12,9 +12,9 @@ python train.py \
 	--is_dryrun \
 	--save_total_limit 2 \
 	--evaluate_during_training \
-	--eval_steps 100 \
-	--logging_steps 25 \
+	--eval_steps 500 \
+	--logging_steps 50 \
 	--num_train_epochs 3 \
-	--output_dir models/mctest_bart \
+	--output_dir models/cosmos_bart \
 	--dataloader_drop_last \
 	--per_device_train_batch_size 8 \
