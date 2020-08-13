@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
 
+from typing import List
+
 
 @dataclass
 class Arguments:
@@ -59,40 +61,22 @@ class DataArguments:
 
 
 @dataclass
-class EvalArguments:
+class EvalScriptArguments:
     model_name: str = field(
         metadata={
             "help": "Model identifier for models in huggingface/transformers."}
     )
-    hypothesis_path: str = field(
-        metadata={"help": "Path to save hypothesis."}
+    test_sets: List[str] = field(
+        default_factory=list,
+        metadata={
+            "help": "Which sets to test on. If empty, test against all. Defaults to []"},
     )
-    test_data_path: str = field(
-        metadata={"help": "Path to saved test dataset."}
-    )
-    reference_path: str = field(
-        metadata={"help": "Path to save references. If none, not creating one."},
+    tokenizer_name: str = field(
+        metadata={"help": "Tokenizer identifier, defaults to model_name"},
         default=None
     )
     model_path: str = field(
         metadata={
-            "help": """Path to pre-trained model, either from hf/transformers or local. 
-                       Defaults to model_name."""},
+            "help": "Path to local model checkpoint or hf/transformers. Defaults to model_name"},
         default=None
-    )
-    tokenizer_name: str = field(
-        metadata={"help": "Tokenizer identifier. Defaults to model_name."},
-        default=None
-    )
-    max_source_length: int = field(
-        metadata={"help": "Max input length for the source context + answer."},
-        default=512
-    )
-    max_target_length: int = field(
-        metadata={"help": "Max input length for the target question to generate."},
-        default=32
-    )
-    batch_size: int = field(
-        metadata={"help": "Evaluation batch size. Defaults to 8"},
-        default=8
     )

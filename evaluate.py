@@ -1,7 +1,10 @@
+import os
+
 import torch
 from torch.utils.data import DataLoader
 
 import nlp
+import nlgeval
 
 from transformers import (
     HfArgumentParser,
@@ -11,13 +14,16 @@ from tqdm.auto import tqdm
 
 from preprocess import DataCollator, NAME_TO_TOK
 from train import NAME_TO_MODEL
-from args import EvalArguments
+from args import EvalScriptArguments
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def get_predictions(model, tokenizer, loader, max_length=32, num_beams=4, rep_penalty=2.5):
+DATASETS = ["mc_test", "squad", "cosmos", "news"]
+
+
+def get_predictions(model, model_name, tokenizer, loader, max_length=32, num_beams=4, rep_penalty=2.5):
     model.to(device)
     model.eval()
 
@@ -33,8 +39,13 @@ def get_predictions(model, tokenizer, loader, max_length=32, num_beams=4, rep_pe
                 early_stopping=True
             )
 
-            prediction = [tokenizer.decode(output, skip_special_tokens=True)
-                          for output in outputs]
+            # Hack to fix the ignoring of first token during decoding
+            if "bart" in model_name:
+                prediction = [tokenizer.decode(output, skip_special_tokens=True)[1:]
+                              for output in outputs]
+            else:
+                prediction = [tokenizer.decode(output, skip_special_tokens=True)
+                              for output in outputs]
             predictions.extend(prediction)
 
     return predictions
@@ -50,36 +61,65 @@ def get_true_targets(tokenizer, loader):
     return true_targets
 
 
-def create_evaluation_files():
-    parser = HfArgumentParser((EvalArguments))
-    args = parser.parse_args_into_dataclasses()[0]
-
-    tok_name = args.model_name if args.tokenizer_name is None else args.tokenizer_name
-    tokenizer = NAME_TO_TOK[tok_name].from_pretrained(tok_name)
-    args.model_path = args.model_name if args.model_path is None else args.model_path
-    model = NAME_TO_MODEL[args.model_name].from_pretrained(args.model_path)
-
-    test_set = torch.load(args.test_data_path)
+def evaluate(model_name, model_path, tokenizer_name, batch_size, test_sets):
+    tokenizer = NAME_TO_TOK[tokenizer_name].from_pretrained(tokenizer_name)
+    model = NAME_TO_MODEL[model_name].from_pretrained(model_path)
 
     collator = DataCollator(tokenizer, is_training=False)
-    test_loader = DataLoader(
-        test_set, collate_fn=collator, batch_size=args.batch_size)
 
-    predictions = get_predictions(model,
-                                  tokenizer,
-                                  test_loader,
-                                  args.max_target_length)
+    for set_ in test_sets:
+        test_set = torch.load(f"./data/{args.model_path}.pt")
+        test_loader = DataLoader(
+            test_set, collate_fn=collator, batch_size=batch_size)
 
-    with open(args.hypothesis_path, "w") as f:
-        f.write("\n".join(predictions))
+        predictions = get_predictions(model,
+                                      model_name,
+                                      tokenizer,
+                                      test_loader,
+                                      32)
 
-    # We only create a reference file if it is specified. These are shared
-    # across models
-    if args.reference_path is not None:
-        true_targets = get_true_targets(tokenizer, test_loader)
-        with open(args.reference_path, "w") as f:
-            f.write("\n".join(true_targets))
+        with open(f"./data/{model_path}_{set_}.txt", "w") as f:
+            f.write("\n".join(predictions))
+
+
+def create_reference_file(dataset, batch_size):
+    # Choose BART as it is the smallest and fastest tokenizer out of the three
+    tok_name = "facebook/bart-base"
+    tokenizer = NAME_TO_TOK[tok_name].from_pretrained(tok_name)
+
+    collator = DataCollator(tokenizer, is_training=False)
+    data = torch.load(f"./data/{dataset}_test_bart.pt")
+    loader = DataLoader(data, collate_fn=collator, batch_size=batch_size)
+
+    true_targets = get_true_targets(tokenizer, loader)
+    with open(f"./data/{dataset}.txt", "w") as f:
+        f.write("\n".join(true_targets))
 
 
 if __name__ == "__main__":
-    create_evaluation_files()
+    parser = HfArgumentParser((EvalScriptArguments))
+    args = parser.parse_args_into_dataclasses()[0]
+
+    batch_size = 4
+    if "bart" in args.model_name:
+        batch_size = 8
+
+    eval_args = {
+        "model_name": args.model_name,
+        "model_path": args.model_name if args.model_path is None else args.model_path,
+        "tokenizer_name": args.model_name if args.tokenizer_name is None else args.tokenizer_name,
+        "batch_size": batch_size,
+    }
+
+    # Make sure that all the reference files exist
+    for dset in DATASETS:
+        if not os.path.isfile(dset + ".txt"):
+            create_reference_file(dset, batch_size=8)
+
+    # Test on all datasets if args.test_sets is empty
+    if len(args.test_sets) < 1:
+        test_sets = DATASETS
+
+    eval_args["test_sets"] = test_sets
+
+    evaluate(**eval_args)
