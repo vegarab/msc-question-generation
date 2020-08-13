@@ -26,23 +26,24 @@ NAME_TO_TOK = {
 
 
 class DataProcessor:
-    def __init__(self, tokenizer, max_source_length=512, max_target_length=32, is_bert=False):
+    def __init__(self, tokenizer, max_source_length=512, max_target_length=32, model_type="bert"):
         self.tokenizer = tokenizer
         self.max_source_length = max_source_length
         self.max_target_length = max_target_length
-        self.is_bert = is_bert
+        self.model_type = model_type
         # Set it here to suppress the warning when == False
         self.bos_token = bool(self.tokenizer.bos_token)
 
     def __call__(self, dataset):
         dataset = dataset.map(self._format_text)
-        dataset = dataset.map(self._add_eos_bos_tokens)
+        dataset = dataset.map(self._add_bos_tokens)
+        dataset = dataset.map(self._add_eos_tokens)
         dataset = dataset.map(self._create_features, batched=True)
 
         return dataset
 
     def _format_text(self, sample):
-        if self.is_bert:
+        if self.model_type == "bert":
             source_text = f"{sample['answer']} [SEP] {sample['context']}"
         else:
             source_text = f"answer: {sample['answer']} context: {sample['context']}"
@@ -56,20 +57,18 @@ class DataProcessor:
 
         return features
 
-    def _add_eos_bos_tokens(self, sample):
-        if not self.is_bert:
-            sample["source_text"] = f"{sample['source_text']}  </s>"
-            # T5 does not add a BOS token when encoding..However, during
-            # generation is will replace the first token with <pad>, even
-            # though the first token is a part of the generated passage. This
-            # is a work-around to have the model learn that the first token of
-            # any target is always the BOS token. Bart adds <s> as BOS and BERT
-            # needs one specified during generation -- this will only trigger
-            # for T5Tokenizer
-            if not self.bos_token:
-                sample["target_text"] = f"<pad> {sample['target_text']} </s>"
-            else:
-                sample["target_text"] = f"{sample['target_text']} </s>"
+    def _add_bos_tokens(self, sample):
+        if not self.model_type == "bert":
+            # BART and T5 ignores the first token during decoding. We therefore
+            # add a <pad> token to the beginning to ensure correct decoding.
+            sample["target_text"] = f"<pad> {sample['target_text']}"
+        return sample
+
+    def _add_eos_tokens(self, sample):
+        if self.model_type == "t5":
+            # T5 does not add EOS itself
+            sample["source_text"] = f"{sample['source_text']} </s>"
+            sample["target_text"] = f"{sample['target_text']} </s>"
         return sample
 
     def _create_features(self, batch):
@@ -130,13 +129,16 @@ def preprocess():
     tok_name = data_args.tokenizer_name
     tokenizer = NAME_TO_TOK[tok_name].from_pretrained(tok_name)
 
-    is_bert = False
-    # TODO: Fix this hard-coded mess
-    if tok_name == "bert-base-cased":
-        is_bert = True
+    # TODO: Fix this hardcoded shit
+    if tok_name == "t5-base":
+        model_type = "t5"
+    elif tok_name == "facebook/bart-base":
+        model_type = "bart"
+    else:
+        model_type = "bert"
 
     processor = DataProcessor(
-        tokenizer, data_args.max_source_length, data_args.max_target_length, is_bert=is_bert)
+        tokenizer, data_args.max_source_length, data_args.max_target_length, model_type=model_type)
 
     # CosmosQA has train, test and validation splits. Since this project only
     # wants a single split for testing, we merge the train and validation
