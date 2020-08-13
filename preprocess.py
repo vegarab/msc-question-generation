@@ -107,17 +107,17 @@ class DataCollator:
         attention_mask = torch.stack(
             [sample["attention_mask"] for sample in batch])
 
-        labels = target_ids[:, :-1].contiguous()
+        decoder_input_ids = target_ids[:, :-1].contiguous()
         lm_labels = target_ids[:, 1:].clone().detach()
 
         if self.is_training:
-            lm_labels[lm_labels[:, :] == self.tokenizer.pad_token_id] = -100
+            lm_labels[target_ids[:, 1:] == self.tokenizer.pad_token_id] = -100
 
         batch_params = {
             "input_ids": source_ids,
             "attention_mask": attention_mask,
             "labels": lm_labels,
-            "decoder_input_ids": labels
+            "decoder_input_ids": decoder_input_ids
         }
 
         return batch_params
