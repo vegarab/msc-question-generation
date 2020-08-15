@@ -30,13 +30,22 @@ def _get_model_name_from_model_path(model_path):
     return model_path.split("/")[-1]
 
 
-def _get_data_file_from_model_name_path(model_name_path):
+def _get_data_file_from_model_name_path(model_name_path, dataset):
     # Remove indicator of trained size, e.g. cosmos_t5_100 -> cosmos_t5
     data_file = re.sub("(_)(\d+)", "", model_name_path)
 
     # Add "test" before model indicator, e.g. cosmos_t5 -> cosmos_test_t5
     split_d = data_file.split("_")
     split_d.insert(-1, "test")
+
+    # Update dataset annotation
+    idx = 1
+    # mc_test is split into two due to '_' in dataset annotation
+    # we therefore need to add a special case here..
+    if split_d[0] == "mc":
+        idx = 2
+    split_d[:idx] = [dataset]
+
     data_file = "_".join(split_d)
 
     return data_file
@@ -86,9 +95,8 @@ def evaluate(model_name, model_path, tokenizer_name, batch_size, test_sets):
 
     collator = DataCollator(tokenizer, is_training=False)
 
-    # Derive file names from model_path
+    # Derive file name from model_path
     model_path_name = _get_model_name_from_model_path(model_path)
-    data_file = _get_data_file_from_model_name_path(model_path_name)
     for set_ in test_sets:
         print(f"*** Creating {model_path_name} {set_} hypothesis file ***")
         predictions_file = f"./eval/{model_path_name}_{set_}.txt"
@@ -97,6 +105,7 @@ def evaluate(model_name, model_path, tokenizer_name, batch_size, test_sets):
             print("Skipping... Already exists")
             continue
 
+        data_file = _get_data_file_from_model_name_path(model_path_name, set_)
         test_set = torch.load(f"./data/{data_file}.pt")
         test_loader = DataLoader(
             test_set, collate_fn=collator, batch_size=batch_size)
@@ -150,6 +159,7 @@ if __name__ == "__main__":
             create_reference_file(dset, batch_size=8)
 
     # Test on all datasets if args.test_sets is empty
+    test_sets = args.test_sets
     if len(args.test_sets) < 1:
         test_sets = DATASETS
 
