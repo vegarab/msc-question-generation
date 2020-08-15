@@ -1,10 +1,10 @@
 import os
+import re
 
 import torch
 from torch.utils.data import DataLoader
 
 import nlp
-import nlgeval
 
 from transformers import (
     HfArgumentParser,
@@ -21,6 +21,25 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 DATASETS = ["mc_test", "squad", "cosmos", "news"]
+
+
+# These two functions are a quick fix to not having to pass extra
+# arguments alongside the relative model_path. All extra files can be derived
+# from this with these two functions.
+def _get_model_name_from_model_path(model_path):
+    return model_path.split("/")[-1]
+
+
+def _get_data_file_from_model_name_path(model_name_path):
+    # Remove indicator of trained size, e.g. cosmos_t5_100 -> cosmos_t5
+    data_file = re.sub("(_)(\d+)", "", model_name_path)
+
+    # Add "test" before model indicator, e.g. cosmos_t5 -> cosmos_test_t5
+    split_d = data_file.split("_")
+    split_d.insert(-1, "test")
+    data_file = "_".join(split_d)
+
+    return data_file
 
 
 def get_predictions(model, model_name, tokenizer, loader, max_length=32, num_beams=4, rep_penalty=2.5):
@@ -67,8 +86,18 @@ def evaluate(model_name, model_path, tokenizer_name, batch_size, test_sets):
 
     collator = DataCollator(tokenizer, is_training=False)
 
+    # Derive file names from model_path
+    model_path_name = _get_model_name_from_model_path(model_path)
+    data_file = _get_data_file_from_model_name_path(model_path_name)
     for set_ in test_sets:
-        test_set = torch.load(f"./data/{args.model_path}.pt")
+        print(f"*** Creating {model_path_name} {set_} hypothesis file ***")
+        predictions_file = f"./eval/{model_path_name}_{set_}.txt"
+        # No need to run this costly procedure if the output already exists
+        if os.path.isfile(predictions_file):
+            print("Skipping... Already exists")
+            continue
+
+        test_set = torch.load(f"./data/{data_file}.pt")
         test_loader = DataLoader(
             test_set, collate_fn=collator, batch_size=batch_size)
 
@@ -78,7 +107,7 @@ def evaluate(model_name, model_path, tokenizer_name, batch_size, test_sets):
                                       test_loader,
                                       32)
 
-        with open(f"./data/{model_path}_{set_}.txt", "w") as f:
+        with open(predictions_file, "w") as f:
             f.write("\n".join(predictions))
 
 
@@ -92,7 +121,7 @@ def create_reference_file(dataset, batch_size):
     loader = DataLoader(data, collate_fn=collator, batch_size=batch_size)
 
     true_targets = get_true_targets(tokenizer, loader)
-    with open(f"./data/{dataset}.txt", "w") as f:
+    with open(f"./eval/{dataset}.txt", "w") as f:
         f.write("\n".join(true_targets))
 
 
@@ -113,7 +142,11 @@ if __name__ == "__main__":
 
     # Make sure that all the reference files exist
     for dset in DATASETS:
-        if not os.path.isfile(dset + ".txt"):
+        print(f"*** Creating {dset} reference file ***")
+        if os.path.isfile("./eval/" + dset + ".txt"):
+            print("Skipping... Already exists")
+            continue
+        else:
             create_reference_file(dset, batch_size=8)
 
     # Test on all datasets if args.test_sets is empty
