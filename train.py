@@ -17,7 +17,7 @@ from transformers import (
 
 
 from preprocess import NAME_TO_TOK, DataCollator
-from args import Arguments, DataArguments
+from args import TrainScriptArguments
 
 
 logger = logging.getLogger(__name__)
@@ -33,9 +33,15 @@ NAME_TO_MODEL = {
 }
 
 
-def run(args=None):
-    parser = HfArgumentParser((Arguments, TrainingArguments))
-    args, training_args = parser.parse_args_into_dataclasses(args)
+def run(args=None, training_args=None):
+    if args is not None and training_args is not None:
+        parser = HfArgumentParser((TrainScriptArguments))
+        args = parser.parse_dict(args)[0]
+        parser = HfArgumentParser((TrainingArguments))
+        training_args = parser.parse_dict(training_args)[0]
+    else:
+        parser = HfArgumentParser((TrainScriptArguments, TrainingArguments))
+        args, training_args = parser.parse_args_into_dataclasses()
 
     # Setup logging
     logging.basicConfig(
@@ -85,5 +91,66 @@ def run(args=None):
         trainer.save_model()
 
 
+DEFAULT_T5 = {
+    "batch_size": 4,
+    "eval_steps": 800,
+    "logging_steps": 50,
+}
+
+DEFAULT_BART = {
+    "batch_size": 8,
+    "eval_steps": 300,
+    "logging_steps": 50,
+}
+
+DEFAULT_BERT = {
+    "batch_size": 6,
+    "eval_steps": 600,
+    "logging_steps": 50,
+}
+
+DEFAULT_ARGS = {
+    "seed": 42,
+    "do_train": True,
+    "logging_first_step": True,
+    "do_eval": True,
+    "save_total_limit": 2,
+    "evaluate_during_training": True,
+    "num_train_epochs": 3,
+    "dataloader_drop_last": True,
+}
+
+
+def _get_data_paths(dataset, model_tag):
+    return f"./data/{dataset}_train_{model_tag}.pt", f"./data/{dataset}_test_{model_tag}.pt"
+
+
 if __name__ == "__main__":
-    run()
+    parser = HfArgumentParser((TrainScriptArguments, TrainingArguments))
+    script_args, training_args = parser.parse_args_into_dataclasses()
+
+    model_args = {}
+    if "bart" in script_args.model_name:
+        model_args = DEFAULT_BART
+        model_tag = "bart"
+    elif "t5" in script_args.model_name:
+        model_args = DEFAULT_T5
+        model_tag = "t5"
+    elif "bert" in script_args.model_name:
+        model_args = DEFAULT_BERT
+        model_tag = "bert"
+
+    train_data_path, test_data_path = _get_data_paths(script_args.dataset,
+                                                      model_tag)
+    args = script_args.__dict__
+    args["train_data_path"] = train_data_path
+    args["test_data_path"] = test_data_path
+
+    training_args = training_args.__dict__
+    if script_args.use_defaults:
+        for key, value in DEFAULT_ARGS.items():
+            training_args[key] = value
+        for key, value in model_args.items():
+            training_args[key] = value
+
+    run(args, training_args)

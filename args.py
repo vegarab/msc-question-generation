@@ -4,19 +4,32 @@ from typing import List
 
 
 @dataclass
-class Arguments:
-    train_data_path: str = field(
-        metadata={"help": "Path to training dataset"}
-    )
-    test_data_path: str = field(
-        metadata={"help": "Path to test dataset"}
-    )
+class TrainScriptArguments:
     model_name: str = field(
         metadata={
             "help": "Model identifier for models in huggingface/transformers."}
     )
+    dataset: str = field(
+        metadata={
+            "help": "Dataset to be used for training. Assumes it exists in ./data/"}
+    )
+    train_data_path: str = field(
+        metadata={"help": "Path to training dataset"},
+        default=None
+    )
+    test_data_path: str = field(
+        metadata={"help": "Path to test dataset"},
+        default=None
+    )
+    use_defaults: bool = field(
+        metadata={
+            "help": "True to use default training values from script. Defaults to True"},
+        default=True
+    )
     wandb_project: str = field(
-        metadata={"help": "Name of wandb project for loggin"}
+        metadata={
+            "help": "Name of wandb project for logging. Defaults to msc_question_generation"},
+        default="msc_question_generation"
     )
     tokenizer_name: str = field(
         metadata={"help": "Tokenizer identifier, defaults to model_name"},
@@ -31,8 +44,9 @@ class Arguments:
         default=32
     )
     is_dryrun: bool = field(
-        metadata={"help": "Set True to notify wandb that we are offline"},
-        default=False
+        metadata={
+            "help": "Set True to notify wandb that we are offline. Defaults to True."},
+        default=True
     )
 
 
