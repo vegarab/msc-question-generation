@@ -12,7 +12,7 @@ from transformers import (
     BartTokenizer,
 )
 
-from args import DataArguments
+from args import DataArguments, get_data_paths
 
 
 NAME_TO_TOK = {
@@ -161,8 +161,9 @@ def preprocess():
     train_data.set_format(type="torch", columns=fields)
     test_data.set_format(type="torch", columns=fields)
 
-    torch.save(train_data, data_args.train_save_path)
-    torch.save(test_data, data_args.test_save_path)
+    train_path, test_path = get_data_paths(data_args.dataset, model_type)
+    torch.save(train_data, train_path)
+    torch.save(test_data, test_path)
 
 
 if __name__ == "__main__":

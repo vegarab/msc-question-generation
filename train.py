@@ -17,7 +17,7 @@ from transformers import (
 
 
 from preprocess import NAME_TO_TOK, DataCollator
-from args import TrainScriptArguments
+from args import TrainScriptArguments, get_data_paths
 
 
 logger = logging.getLogger(__name__)
@@ -121,10 +121,6 @@ DEFAULT_ARGS = {
 }
 
 
-def _get_data_paths(dataset, model_tag):
-    return f"./data/{dataset}_train_{model_tag}.pt", f"./data/{dataset}_test_{model_tag}.pt"
-
-
 if __name__ == "__main__":
     parser = HfArgumentParser((TrainScriptArguments, TrainingArguments))
     script_args, training_args = parser.parse_args_into_dataclasses()
@@ -140,8 +136,8 @@ if __name__ == "__main__":
         model_args = DEFAULT_BERT
         model_tag = "bert"
 
-    train_data_path, test_data_path = _get_data_paths(script_args.dataset,
-                                                      model_tag)
+    train_data_path, test_data_path = get_data_paths(script_args.dataset,
+                                                     model_tag)
     args = script_args.__dict__
     args["train_data_path"] = train_data_path
     args["test_data_path"] = test_data_path

@@ -3,6 +3,10 @@ from dataclasses import dataclass, field
 from typing import List
 
 
+def get_data_paths(dataset, model_tag):
+    return f"./data/{dataset}_train_{model_tag}.pt", f"./data/{dataset}_test_{model_tag}.pt"
+
+
 @dataclass
 class TrainScriptArguments:
     model_name: str = field(
@@ -52,12 +56,6 @@ class TrainScriptArguments:
 
 @dataclass
 class DataArguments:
-    train_save_path: str = field(
-        metadata={"help": "Path to save training dataset"}
-    )
-    test_save_path: str = field(
-        metadata={"help": "Path to save test dataset"}
-    )
     tokenizer_name: str = field(
         metadata={"help": "Tokenizer identifier, from huggingface/transformers"}
     )
