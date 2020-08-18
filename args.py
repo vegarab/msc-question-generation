@@ -52,6 +52,16 @@ class TrainScriptArguments:
             "help": "Set True to notify wandb that we are offline. Defaults to True."},
         default=True
     )
+    data_size: int = field(
+        metadata={
+            "help": "Percentage of data to use during training. Defaults to 100."},
+        default=100
+    )
+    absolute_data_size: int = field(
+        metadata={
+            "help": "Absolute number of training rows. Overrides data_size. Defaults to 100%."},
+        default=0
+    )
 
 
 @dataclass

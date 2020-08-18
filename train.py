@@ -70,10 +70,36 @@ def run(args=None, training_args=None):
         model = NAME_TO_MODEL[args.model_name].from_pretrained(args.model_name)
     tokenizer = NAME_TO_TOK[tokenizer_name].from_pretrained(tokenizer_name)
 
+    logger.info(f"Path {args.train_data_path}")
     train_data = torch.load(
         args.train_data_path) if training_args.do_train else None
     test_data = torch.load(
         args.test_data_path) if training_args.do_eval else None
+
+    # Resizes the train set to args.data_size percentage
+    logger.info(f"Train-data pre-size: {train_data.num_rows}")
+    if args.absolute_data_size:
+        num_rows = args.absolute_data_size
+    else:
+        num_rows = int(train_data.num_rows * (args.data_size / 100))
+
+    # The select takes time even when selecting all rows. Do this check first.
+    if args.absolute_data_size or args.data_size < 100:
+        # Shuffle train_data before re-sizing. Controlling with seed
+        # Make sure to override the cache file as it does not care about data size
+        train_data = train_data.shuffle(seed=training_args.seed,
+                                        keep_in_memory=True,
+                                        load_from_cache_file=False)
+        train_data = train_data.select(torch.arange(0, num_rows),
+                                       keep_in_memory=True,
+                                       load_from_cache_file=False)
+
+        # For some reason, Dataset.select() and Dataset.shuffle() resets format
+        fields = ["source_ids", "target_ids", "attention_mask"]
+        train_data.set_format(type="torch", columns=fields)
+        test_data.set_format(type="torch", columns=fields)
+
+    logger.info(f"Train-data size: {train_data.num_rows}")
 
     collator = DataCollator(tokenizer=tokenizer,
                             is_training=training_args.do_train,
