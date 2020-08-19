@@ -118,19 +118,19 @@ def run(args=None, training_args=None):
 
 
 DEFAULT_T5 = {
-    "batch_size": 4,
+    "per_device_train_batch_size": 4,
     "eval_steps": 800,
     "logging_steps": 50,
 }
 
 DEFAULT_BART = {
-    "batch_size": 8,
+    "per_device_train_batch_size": 8,
     "eval_steps": 300,
     "logging_steps": 50,
 }
 
 DEFAULT_BERT = {
-    "batch_size": 6,
+    "per_device_train_batch_size": 8,
     "eval_steps": 600,
     "logging_steps": 50,
 }
