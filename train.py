@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 NAME_TO_MODEL = {
     "t5-base": T5ForConditionalGeneration,
     "t5-small": T5ForConditionalGeneration,
+    "t5-large": T5ForConditionalGeneration,
     "xlnet-base-cased": XLNetLMHeadModel,
     "bert-base-cased": EncoderDecoderModel,
     "facebook/bart-large": BartForConditionalGeneration,

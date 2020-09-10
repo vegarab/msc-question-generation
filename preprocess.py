@@ -18,6 +18,7 @@ from args import DataArguments, get_data_paths
 NAME_TO_TOK = {
     "t5-base": T5Tokenizer,
     "t5-small": T5Tokenizer,
+    "t5-large": T5Tokenizer,
     "bert-base-cased": BertTokenizer,
     "xlnet-base-cased": XLNetTokenizer,
     "facebook/bart-large": BartTokenizer,
