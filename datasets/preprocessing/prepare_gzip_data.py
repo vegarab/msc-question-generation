@@ -3,7 +3,7 @@ import json
 import argparse
 
 
-if __main__ == '__name__':
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Turn json.gz data to json data.')
     parser.add_argument('--input', type=str,
