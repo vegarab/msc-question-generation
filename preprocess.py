@@ -130,7 +130,7 @@ def preprocess():
     tok_name = data_args.tokenizer_name
     tokenizer = NAME_TO_TOK[tok_name].from_pretrained(tok_name)
 
-    # TODO: Fix this hardcoded shit
+    # TODO: Fix this hardcoded stuff
     if tok_name == "t5-base":
         model_type = "t5"
     elif tok_name == "facebook/bart-base":

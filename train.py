@@ -63,7 +63,7 @@ def run(args=None, training_args=None):
 
     tokenizer_name = args.model_name if args.tokenizer_name is None else args.tokenizer_name
 
-    # TODO: Fix this hard-coded shit
+    # TODO: Fix this hard-coded stuff
     if args.model_name == "bert-base-cased":
         model = EncoderDecoderModel.from_encoder_decoder_pretrained(
             args.model_name, args.model_name)
